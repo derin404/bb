@@ -842,6 +842,8 @@ function doSignup() {
       to_name:  user.name,
       email:    user.email,
     });
+    // Send welcome SMS
+    sendSMS(user.phone, 'signup', { name: user.name });
     setTimeout(()=>{closeAuth();afterAuth();},2000);
   },900);
 }
@@ -949,6 +951,8 @@ function submitRequest() {
   const urgency=document.querySelector('input[name="urgency"]:checked')?.value||'Critical';
   const req={id:Date.now(),userId:u.id,patient,blood,units,hospital,contact:'+91 '+phone,city,urgency,requestedAt:Date.now()};
   const arr=getRequests();arr.push(req);saveRequests(arr);
+  // Send submitted SMS to requester
+  sendSMS(u.phone, 'submitted', { patient, blood, units, hospital, city: req.city });
   const btn=$('request-btn');btn.textContent='Sending…';btn.disabled=true;btn.style.opacity='.7';
   setTimeout(()=>{
     btn.textContent='Send Emergency Request';btn.disabled=false;btn.style.opacity='1';
@@ -1150,7 +1154,28 @@ async function sendEmail(type, params) {
   }
 }
 
-/* ─── TOAST ───────────────────────────────────────────── */
+/* ─── SEND SMS ────────────────────────────────────────── */
+const SMS_API = 'https://bloodbridge.qzz.io/api/sms';
+
+async function sendSMS(to, type, data) {
+  if (!to) return;
+  // Ensure number is in E.164 format — add +91 if not already there
+  const phone = to.startsWith('+') ? to : '+91' + to.replace(/\D/g,'').slice(-10);
+  try {
+    const res = await fetch(SMS_API, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ to: phone, type, data }),
+    });
+    if (res.ok) toast('📱 SMS sent to ' + phone, 'success');
+    else { const e = await res.json(); toast('SMS failed: ' + (e.message || res.status), 'error'); }
+  } catch (err) {
+    console.error('SMS error:', err);
+    toast('SMS failed: ' + err.message, 'error');
+  }
+}
+
+
 function toast(msg, type = 'info') {
   const wrap = $('toast');
   const el = document.createElement('div');
@@ -1252,6 +1277,14 @@ async function connectDonorToRequest(donorId, reqId, e) {
       donor_name:  donor.name,
       donor_phone: donor.phone,
     });
+    // Send connected SMS to requester
+    sendSMS(requester.phone, 'connected', {
+      patient:     req.patient,
+      blood:       req.blood,
+      hospital:    req.hospital,
+      donor_name:  donor.name,
+      donor_phone: donor.phone,
+    });
   }
 
   // Send connected email to donor
@@ -1265,6 +1298,14 @@ async function connectDonorToRequest(donorId, reqId, e) {
       units:       req.units,
       hospital:    req.hospital,
       city:        req.city,
+      donor_name:  donor.name,
+      donor_phone: donor.phone,
+    });
+    // Send connected SMS to donor
+    sendSMS(donorUser.phone, 'connected', {
+      patient:     req.patient,
+      blood:       req.blood,
+      hospital:    req.hospital,
       donor_name:  donor.name,
       donor_phone: donor.phone,
     });
@@ -1300,6 +1341,14 @@ async function acceptRequest(reqId) {
       city:       req.city,
       urgency:    req.urgency,
       contact:    req.contact,
+    });
+    // Send accepted SMS
+    sendSMS(requester.phone, 'accepted', {
+      patient:  req.patient,
+      blood:    req.blood,
+      units:    req.units,
+      hospital: req.hospital,
+      city:     req.city,
     });
   }
 
