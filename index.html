@@ -241,8 +241,24 @@ footer{background:var(--bg);padding:3.5rem 5vw 2rem;border-top:1px solid var(--b
 .ab-connect{border-color:rgba(200,16,46,.4);color:var(--red-light)}
 .ab-connect:hover{background:rgba(200,16,46,.1)}
 .ab-disabled{border-color:rgba(158,128,128,.2);color:var(--muted);cursor:default;opacity:.5}
+/* ─── HAMBURGER MENU ─── */
+.nav-hamburger{display:none;flex-direction:column;gap:5px;background:none;border:none;cursor:pointer;padding:4px;z-index:201}
+.nav-hamburger span{display:block;width:22px;height:2px;background:var(--text);border-radius:2px;transition:all .3s}
+.nav-hamburger.open span:nth-child(1){transform:translateY(7px) rotate(45deg)}
+.nav-hamburger.open span:nth-child(2){opacity:0}
+.nav-hamburger.open span:nth-child(3){transform:translateY(-7px) rotate(-45deg)}
+.mobile-menu{display:none;position:fixed;inset:0;top:60px;z-index:199;background:rgba(10,2,5,.98);backdrop-filter:blur(20px);flex-direction:column;padding:2rem 5vw;gap:0;overflow-y:auto}
+.mobile-menu.open{display:flex}
+.mobile-menu a,.mobile-menu button{text-decoration:none;color:var(--muted);font-size:1.1rem;font-weight:500;padding:1rem 0;border-bottom:1px solid var(--border);display:block;background:none;border-left:none;border-right:none;border-top:none;cursor:pointer;font-family:'DM Sans',sans-serif;text-align:left;width:100%;transition:color .2s}
+.mobile-menu a:hover,.mobile-menu button:hover{color:var(--text)}
+.mobile-menu .mob-admin{color:var(--red-light)}
+.mobile-menu .mob-divider{margin:1rem 0;border-top:1px solid var(--border)}
+.mob-auth-row{display:flex;gap:.7rem;padding-top:1.2rem;flex-wrap:wrap}
+.mob-auth-row button{padding:.75rem 1.4rem;font-size:.9rem;flex:1;min-width:120px;border-radius:2px}
+
+/* ─── RESPONSIVE ─── */
 @media(max-width:900px){
-  .hero-grid,.why-grid{grid-template-columns:1fr}
+  .hero-grid,.why-grid,.two-col-grid{grid-template-columns:1fr}
   .hero-vis{height:280px}
   .stats-grid{grid-template-columns:repeat(2,1fr)}
   .steps-grid,.testi-grid{grid-template-columns:1fr}
@@ -250,12 +266,55 @@ footer{background:var(--bg);padding:3.5rem 5vw 2rem;border-top:1px solid var(--b
   .types-grid{grid-template-columns:repeat(4,1fr)}
   .fg{grid-template-columns:1fr 1fr}
   .nav-links{display:none}
+  .nav-hamburger{display:flex}
   .dash-sg{grid-template-columns:repeat(2,1fr)}
+  /* Request & register two-col → one-col */
+  #request-blood .si > div,
+  #register .si > div{grid-template-columns:1fr !important}
+  /* Auth modal wider on tablet */
+  .mbox{max-width:520px}
 }
 @media(max-width:600px){
   .types-grid{grid-template-columns:repeat(2,1fr)}
   .fg{grid-template-columns:1fr}
   .dash-body{padding:1rem}
+  section{padding:4rem 5vw}
+  /* Stats one row */
+  .stats-grid{grid-template-columns:repeat(2,1fr);gap:1rem}
+  /* Dash nav wraps */
+  .dash-nav{flex-wrap:wrap;gap:.5rem;padding:.8rem 1rem}
+  .dash-sg{grid-template-columns:repeat(2,1fr);gap:.7rem}
+  /* Dash tabs scroll */
+  .dtabs{overflow-x:auto;-webkit-overflow-scrolling:touch}
+  .dtab{white-space:nowrap;font-size:.8rem;padding:.65rem .9rem}
+  /* Table scroll */
+  #d-scroll{overflow-x:auto;-webkit-overflow-scrolling:touch}
+  #dash-table{font-size:.78rem;min-width:600px}
+  #dash-table th,#dash-table td{padding:.65rem .7rem}
+  /* Dash toolbar wraps */
+  .dash-tb{gap:.6rem}
+  .dash-tb .field-input{font-size:.8rem}
+  /* Auth modal fullscreen on mobile */
+  .overlay{padding:.5rem}
+  .mbox{max-width:100%;max-height:96vh;border-radius:4px}
+  /* Hero */
+  .hero-actions{flex-direction:column}
+  .hero-actions .btn-p,.hero-actions .btn-o{text-align:center;width:100%}
+  /* Nav chip truncate */
+  .nav-uname{max-width:60px}
+  /* Connect modal */
+  .cmod-box{max-width:100%}
+  /* Forms two-col → one-col */
+  .mbox [style*="grid-template-columns:1fr 1fr"]{display:flex !important;flex-direction:column}
+  /* Ticker */
+  .ticker-label{display:none}
+  /* Emergency banner */
+  .ebanner{font-size:.7rem;padding:.45rem}
+  /* Footer */
+  .fbot{flex-direction:column;gap:.5rem;text-align:center}
+  /* Impact card */
+  .impact-card{padding:1.8rem}
+  .impact-num{font-size:4rem}
 }
 </style>
 </head>
@@ -281,8 +340,33 @@ footer{background:var(--bg);padding:3.5rem 5vw 2rem;border-top:1px solid var(--b
       <div class="nav-chip"><div class="nav-av" id="nav-av">?</div><span class="nav-uname" id="nav-un">User</span></div>
       <button class="btn-s btn-s-out" onclick="userLogout()">Log Out</button>
     </div>
+    <button class="nav-hamburger" id="nav-hamburger" onclick="toggleMobileMenu()" aria-label="Menu">
+      <span></span><span></span><span></span>
+    </button>
   </div>
 </nav>
+
+<!-- MOBILE MENU -->
+<div class="mobile-menu" id="mobile-menu">
+  <a href="#how"          onclick="closeMobileMenu()">How it Works</a>
+  <a href="#request-blood"onclick="closeMobileMenu()">Request Blood</a>
+  <a href="#register"     onclick="closeMobileMenu()">Donate</a>
+  <button class="mob-admin" onclick="closeMobileMenu();openAdminLogin()">Admin Dashboard</button>
+  <div class="mob-divider"></div>
+  <div id="mob-lo">
+    <div class="mob-auth-row">
+      <button class="btn-s btn-s-out" onclick="closeMobileMenu();openAuth('login')">Log In</button>
+      <button class="btn-s btn-s-pri" onclick="closeMobileMenu();openAuth('signup')">Sign Up</button>
+    </div>
+  </div>
+  <div id="mob-li" style="display:none">
+    <div style="display:flex;align-items:center;gap:.8rem;padding:1rem 0;border-bottom:1px solid var(--border)">
+      <div class="nav-av" id="mob-av" style="width:34px;height:34px;border-radius:50%;background:var(--red);display:flex;align-items:center;justify-content:center;font-size:.75rem;font-weight:700;color:#fff;flex-shrink:0">?</div>
+      <span id="mob-un" style="font-weight:600;color:var(--text)">User</span>
+    </div>
+    <button onclick="closeMobileMenu();userLogout()" style="color:#FF7777;border-color:rgba(255,100,100,.2);margin-top:.5rem">Log Out</button>
+  </div>
+</div>
 
 <!-- HERO -->
 <section id="hero">
@@ -385,7 +469,7 @@ footer{background:var(--bg);padding:3.5rem 5vw 2rem;border-top:1px solid var(--b
 
 <!-- DONOR REGISTRATION -->
 <section id="register" style="background:var(--bg2)"><div class="si">
-  <div style="display:grid;grid-template-columns:1fr 1fr;gap:5rem;align-items:center">
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:5rem;align-items:center" class="two-col-grid">
     <div>
       <div class="stag">Join Us</div><h2>Become a<br>Donor Today</h2>
       <p class="sdesc" style="margin-bottom:2rem">Fill in your details and become part of India's fastest-growing emergency blood donor network.</p>
@@ -442,7 +526,7 @@ footer{background:var(--bg);padding:3.5rem 5vw 2rem;border-top:1px solid var(--b
 <section id="request-blood" style="background:var(--bg3);position:relative;overflow:hidden">
   <div style="position:absolute;inset:0;background:radial-gradient(ellipse 60% 60% at 30% 50%,rgba(200,16,46,.07) 0%,transparent 70%);pointer-events:none"></div>
   <div class="si" style="position:relative">
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:5rem;align-items:start">
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:5rem;align-items:start" class="two-col-grid">
       <div>
         <div class="stag">Emergency Request</div>
         <h2>Need Blood<br><span style="color:var(--red-light)">Right Now?</span></h2>
@@ -528,7 +612,26 @@ footer{background:var(--bg);padding:3.5rem 5vw 2rem;border-top:1px solid var(--b
     <div class="fbrand"><a href="#hero" class="nav-logo" style="text-decoration:none"><div class="logo-drop" style="width:22px;height:26px"></div><span class="logo-text" style="font-size:1.2rem">Blood<span>Bridge</span></span></a><p>Connecting donors with patients in emergency need — real-time, nationwide, 24/7. Because every second matters.</p></div>
     <div class="fcol"><h4>Platform</h4><ul><li><a href="#register">Register to Donate</a></li><li><a href="#request-blood">Find Blood</a></li><li><a href="#" onclick="openAdminLogin();return false">Hospital Portal</a></li><li><a href="#" onclick="openAdminLogin();return false">Blood Bank Login</a></li></ul></div>
     <div class="fcol"><h4>Resources</h4><ul><li><a href="#">Eligibility Guide</a></li><li><a href="#">Blood Type Info</a></li><li><a href="#">FAQ</a></li><li><a href="#">Press</a></li></ul></div>
-    <div class="fcol"><h4>Company</h4><ul><li><a href="#">About Us</a></li><li><a href="#">Careers</a></li><li><a href="#">Contact</a></li><li><a href="#" onclick="openAdminLogin();return false" style="color:var(--red-light)">Admin Dashboard</a></li></ul></div>
+    <div class="fcol"><h4>Contact Us</h4><ul>
+      <li><a href="mailto:code.derin@gmail.com" style="display:flex;align-items:center;gap:7px">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,12 2,6"/></svg>
+        code.derin@gmail.com</a></li>
+      <li><a href="tel:+917907709590" style="display:flex;align-items:center;gap:7px">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.69 13a19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 3.6 2.18h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L7.91 9.91"/></svg>
+        +91 79077 09590</a></li>
+      <li><a href="#" onclick="openAdminLogin();return false" style="color:var(--red-light)">Admin Dashboard</a></li>
+    </ul></div>
+  </div>
+  <div style="max-width:1200px;margin:0 auto 2rem;padding-top:2rem;border-top:1px solid var(--border);display:flex;align-items:center;gap:2rem;flex-wrap:wrap">
+    <span style="font-size:.75rem;text-transform:uppercase;letter-spacing:2px;color:var(--muted)">Get in Touch</span>
+    <a href="mailto:code.derin@gmail.com" style="display:flex;align-items:center;gap:7px;text-decoration:none;color:var(--muted);font-size:.85rem;transition:color .2s" onmouseover="this.style.color='var(--text)'" onmouseout="this.style.color='var(--muted)'">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--red-light)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,12 2,6"/></svg>
+      code.derin@gmail.com
+    </a>
+    <a href="tel:+917907709590" style="display:flex;align-items:center;gap:7px;text-decoration:none;color:var(--muted);font-size:.85rem;transition:color .2s" onmouseover="this.style.color='var(--text)'" onmouseout="this.style.color='var(--muted)'">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--red-light)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.69 13a19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 3.6 2.18h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L7.91 9.91"/></svg>
+      +91 79077 09590
+    </a>
   </div>
   <div class="fbot"><span>© 2025 BloodBridge. All rights reserved.</span><span>Made with ♥ to save lives</span></div>
 </footer>
@@ -542,7 +645,7 @@ footer{background:var(--bg);padding:3.5rem 5vw 2rem;border-top:1px solid var(--b
     <!-- SIGNUP -->
     <div class="fcard" id="av-signup" style="padding:1.8rem">
       <div style="display:flex;flex-direction:column;gap:.95rem">
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:.8rem">
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:.8rem" class="two-col-grid">
           <div class="field-group"><label class="field-label">First Name</label><input id="su-fn" class="field-input" type="text" placeholder="Arjun"/><span class="ferr" id="e-su-fn"></span></div>
           <div class="field-group"><label class="field-label">Last Name</label><input id="su-ln" class="field-input" type="text" placeholder="Mehta"/><span class="ferr" id="e-su-ln"></span></div>
         </div>
@@ -737,11 +840,19 @@ onAuthStateChanged(auth, async fbUser => {
     $('nav-li').style.display = 'flex';
     $('nav-av').textContent   = ini(currentUser.name);
     $('nav-un').textContent   = currentUser.name.split(' ')[0];
+    // Mobile menu
+    $('mob-lo').style.display = 'none';
+    $('mob-li').style.display = 'block';
+    $('mob-av').textContent   = ini(currentUser.name);
+    $('mob-un').textContent   = currentUser.name;
     showForms(currentUser);
   } else {
     currentUser = null;
     $('nav-lo').style.display = 'flex';
     $('nav-li').style.display = 'none';
+    // Mobile menu
+    $('mob-lo').style.display = 'block';
+    $('mob-li').style.display = 'none';
     showGates();
   }
 });
@@ -1457,6 +1568,26 @@ document.querySelectorAll('.step-card,.type-card,.testi-card,.feat-item').forEac
 $('su-pw2').addEventListener('keydown', e => { if (e.key === 'Enter') doSignup(); });
 $('li-pw').addEventListener('keydown',  e => { if (e.key === 'Enter') doLogin();  });
 
+/* ═══════════════════════════════════════════════════════════════════
+   MOBILE MENU
+   ═══════════════════════════════════════════════════════════════════ */
+function toggleMobileMenu() {
+  const menu = $('mobile-menu');
+  const btn  = $('nav-hamburger');
+  const open = menu.classList.toggle('open');
+  btn.classList.toggle('open', open);
+  document.body.style.overflow = open ? 'hidden' : '';
+}
+function closeMobileMenu() {
+  $('mobile-menu').classList.remove('open');
+  $('nav-hamburger').classList.remove('open');
+  document.body.style.overflow = '';
+}
+// Close mobile menu on resize to desktop
+window.addEventListener('resize', () => {
+  if (window.innerWidth > 900) closeMobileMenu();
+});
+
 /* ─── Expose all functions to window for inline onclick handlers ─── */
 Object.assign(window, {
   openAuth, closeAuth, switchAuth, doSignup, doLogin, doForgot,
@@ -1465,6 +1596,7 @@ Object.assign(window, {
   openAdminLogin, closeAdminLogin, doAdminLogin, adminLogout,
   switchDTab, renderDash, exportCSV, clearDash, acceptRequest,
   openConnect, closeConnect, connectDonorToRequest,
+  toggleMobileMenu, closeMobileMenu,
 });
 </script>
 </body>
